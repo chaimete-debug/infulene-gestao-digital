@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sistema de Registos da Igreja</title>
+  <meta name="theme-color" content="#0f766e" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">✦</div>
+        <div>
+          <h1>Sistema de Registos</h1>
+          <p>Plano, cultos, finanças e membros</p>
+        </div>
+      </div>
+      <nav>
+        <button class="nav-btn active" data-view="formView">Novo registo</button>
+        <button class="nav-btn" data-view="dashboardView">Painel</button>
+        <button class="nav-btn" data-view="helpView">Configuração</button>
+      </nav>
+      <div class="status-card">
+        <span class="status-dot" id="statusDot"></span>
+        <div>
+          <strong id="statusTitle">A preparar</strong>
+          <small id="statusText">Aguardando ligação ao backend</small>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <section id="formView" class="view active">
+        <header class="page-header">
+          <div>
+            <span class="eyebrow">Novo lançamento</span>
+            <h2>Formulário convertido do XLSForm</h2>
+            <p>Preencha apenas a área relevante. O sistema valida PIN, campos obrigatórios e grava no Google Sheets.</p>
+          </div>
+          <button id="resetBtn" class="ghost-btn">Limpar</button>
+        </header>
+
+        <div class="progress-wrap">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <form id="dynamicForm" class="form-card" novalidate></form>
+      </section>
+
+      <section id="dashboardView" class="view">
+        <header class="page-header">
+          <div>
+            <span class="eyebrow">Painel rápido</span>
+            <h2>Resumo dos registos</h2>
+            <p>Os totais são lidos directamente do Google Sheets, quando o backend estiver configurado.</p>
+          </div>
+          <button id="refreshStatsBtn" class="primary-btn">Actualizar</button>
+        </header>
+        <div class="kpi-grid" id="statsGrid"></div>
+        <div class="table-card">
+          <h3>Últimos registos</h3>
+          <div class="table-scroll"><table id="recentTable"><thead></thead><tbody></tbody></table></div>
+        </div>
+      </section>
+
+      <section id="helpView" class="view">
+        <header class="page-header">
+          <div>
+            <span class="eyebrow">Instalação</span>
+            <h2>Como ligar ao Google Sheets</h2>
+            <p>Publique o Apps Script como Web App e cole a URL em <code>frontend/config.js</code>.</p>
+          </div>
+        </header>
+        <div class="help-grid">
+          <article class="help-card"><strong>1. Google Sheets</strong><p>Crie uma planilha e abra Extensões → Apps Script.</p></article>
+          <article class="help-card"><strong>2. Apps Script</strong><p>Cole o conteúdo de <code>backend/Code.gs</code>, guarde e faça Deploy → Web app.</p></article>
+          <article class="help-card"><strong>3. Vercel</strong><p>Suba a pasta <code>frontend</code> para GitHub/Vercel. Depois actualize <code>APPS_SCRIPT_URL</code>.</p></article>
+          <article class="help-card"><strong>4. Membros</strong><p>Use a folha <code>Membros</code> com colunas <code>name</code>, <code>label</code>, <code>Telefone</code> e os demais campos do cadastro.</p></article>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
