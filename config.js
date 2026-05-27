@@ -6,4 +6,4 @@ window.APP_CONFIG = {
   APP_NAME: 'Sistema de Registos da Igreja',
   ORG_NAME: 'Igreja Local',
   DEFAULT_PIN_ENABLED: true
-};
+}; 
