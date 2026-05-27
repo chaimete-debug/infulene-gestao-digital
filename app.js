@@ -3813,7 +3813,7 @@ const CHOICES = {
 };
 
 const state = {
-  values: {}, members: [], repeats: {}, currentView: 'formView', stats: null, authToken: localStorage.getItem('authToken') || '', user: JSON.parse(localStorage.getItem('authUser') || 'null')
+  values: {}, members: [], repeats: {}, currentView: 'formView', stats: null, authToken: '', user: null
 };
 const PIN_BY_MODULE = {}; // O acesso agora é controlado por username e palavra-passe.
 
@@ -4306,8 +4306,7 @@ async function login(username, password){
   state.authToken = out.token;
   state.user = out.user;
   state.members = out.members || [];
-  localStorage.setItem('authToken', state.authToken);
-  localStorage.setItem('authUser', JSON.stringify(state.user));
+  // Sessão não persistente: ao fechar/recarregar o sistema, o login volta a ser exigido.
   showApp();
   setStatus('ok','Ligado','Sessão iniciada com sucesso');
   setVal('submission_uuid', uuid());
@@ -4321,6 +4320,8 @@ function logout(){
   state.members = [];
   localStorage.removeItem('authToken');
   localStorage.removeItem('authUser');
+  sessionStorage.removeItem('authToken');
+  sessionStorage.removeItem('authUser');
   showLogin();
 }
 
@@ -4341,12 +4342,14 @@ function initAuth(){
     }
   });
   $('#logoutBtn')?.addEventListener('click', logout);
-  if(state.authToken && state.user){
-    showApp();
-    bootstrap();
-  }else{
-    showLogin();
-  }
+  // Por segurança, o sistema exige credenciais sempre que a aplicação é aberta ou recarregada.
+  localStorage.removeItem('authToken');
+  localStorage.removeItem('authUser');
+  sessionStorage.removeItem('authToken');
+  sessionStorage.removeItem('authUser');
+  state.authToken = '';
+  state.user = null;
+  showLogin();
 }
 
 $$('.nav-btn').forEach(btn => btn.addEventListener('click', () => {
