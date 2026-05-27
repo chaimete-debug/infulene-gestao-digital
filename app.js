@@ -3997,7 +3997,8 @@ function userCanViewModule(module){
   const area = moduleArea(module);
   const viewAreas = currentViewAreas();
   const allowed = currentAllowedModules();
-  return allowed.includes('*') || allowed.includes(String(module)) || viewAreas.includes(area) || !!user.canConfig;
+  const viewModules = normaliseList(user.viewModules);
+  return allowed.includes('*') || allowed.includes(String(module)) || viewModules.includes(String(module)) || viewAreas.includes(area) || !!user.canConfig;
 }
 
 function userCanSubmitModule(module){
@@ -4358,6 +4359,39 @@ function currentApprovalModules(){
   return String((state.user || {}).approvalModules || '').split(',').map(x=>x.trim()).filter(Boolean);
 }
 
+function defaultClientPermissions(role){
+  const all = ['PLANO','CULTOS','FINANCAS','MEMBROS'];
+  const r = String(role || '').toUpperCase();
+  if(r === 'PASTOR') return { viewAreas: all, submitAreas: [], approveAreas: [] };
+  if(r === 'ADMIN_IT' || r === 'ADMIN' || r === 'ADMINISTRADOR') return { viewAreas: all, submitAreas: all, approveAreas: all };
+  if(r === 'SECRETARIO' || r === 'SECRETÁRIO') return { viewAreas: all, submitAreas: ['PLANO','CULTOS','MEMBROS'], approveAreas: ['PLANO','CULTOS','MEMBROS'] };
+  if(r === 'TESOUREIRO') return { viewAreas: all, submitAreas: ['FINANCAS'], approveAreas: ['FINANCAS'] };
+  if(r === 'LIDER' || r === 'LÍDER') return { viewAreas: all, submitAreas: all, approveAreas: [] };
+  return { viewAreas: [], submitAreas: [], approveAreas: [] };
+}
+
+function ensureClientPermissions(user){
+  if(!user) return user;
+  const defaults = defaultClientPermissions(user.role);
+  const viewAreas = normaliseList(user.viewAreas);
+  const submitAreas = normaliseList(user.submitAreas);
+  const approveAreas = normaliseList(user.approveAreas);
+  if(!viewAreas.length) user.viewAreas = defaults.viewAreas;
+  else user.viewAreas = viewAreas;
+  if(!submitAreas.length) user.submitAreas = defaults.submitAreas;
+  else user.submitAreas = submitAreas;
+  if(!approveAreas.length) user.approveAreas = defaults.approveAreas;
+  else user.approveAreas = approveAreas;
+  user.allowedModules = user.allowedModules || user.submitAreas.map(a => Object.entries(MODULE_AREAS).find(([m, area]) => area === a)?.[0]).filter(Boolean).join(',');
+  user.viewModules = user.viewModules || user.viewAreas.map(a => Object.entries(MODULE_AREAS).find(([m, area]) => area === a)?.[0]).filter(Boolean).join(',');
+  user.approvalModules = user.approvalModules || user.approveAreas.map(a => Object.entries(MODULE_AREAS).find(([m, area]) => area === a)?.[0]).filter(Boolean).join(',');
+  user.canForm = user.canForm || user.viewAreas.length > 0 || user.submitAreas.length > 0;
+  user.canDashboard = user.canDashboard || user.viewAreas.length > 0;
+  user.canReport = user.canReport || user.viewAreas.includes('FINANCAS');
+  user.canApprove = user.canApprove || user.approveAreas.length > 0;
+  return user;
+}
+
 function applyUserPermissions(){
   const user = state.user || {};
   $('#currentUserName').textContent = user.name || user.username || 'Utilizador';
@@ -4463,7 +4497,7 @@ async function login(username, password){
     throw new Error(msg);
   }
   state.authToken = out.token;
-  state.user = out.user;
+  state.user = ensureClientPermissions(out.user);
   state.members = out.members || [];
   showApp();
   setStatus('ok','Ligado','Sessão iniciada com sucesso');
